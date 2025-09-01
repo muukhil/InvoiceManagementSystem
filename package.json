@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "@react-pdf/renderer": "^4.2.2",
+    "jspdf": "^3.0.0",
+    "react-pdf": "^9.2.1"
+  },
+  "name": "invoice",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
