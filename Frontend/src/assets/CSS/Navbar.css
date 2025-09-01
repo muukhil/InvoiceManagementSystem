@@ -1,0 +1,12 @@
+nav{
+    background-color: seagreen;
+    display: flex;
+    height: 5rem;
+    position: relative;
+}
+li{
+    list-style-type: none;
+}
+nav li a{
+    text-decoration: none;
+}
