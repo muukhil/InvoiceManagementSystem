@@ -10,3 +10,7 @@ li{
 nav li a{
     text-decoration: none;
 }
+
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}

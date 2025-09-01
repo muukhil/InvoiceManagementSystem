@@ -1,155 +1,273 @@
 import {React, useEffect, useState} from 'react'
+import axios from "axios";
 import Navbar from "./Navbar"
+import "../CSS/AddInvoice.css"
 
 const AddInvoice = () => {
-  const [total, setTotal] = useState(0);
-  const [subtotal, setSubTotal] = useState(0);
-  const [cgst, setCGST] = useState(0);
-  const [sgst, setSGST] = useState(0);
-  const invoice = {
-    invoiceNumber: 'INV-001',
-    date: '2025-04-26',
-    dueDate: '2025-05-10',
-    billTo: {
-      name: 'Jane Doe',
-      address: '123 Main Street',
-      city: 'Springfield',
-      zip: '12345',
-      country: 'USA'
-    },
-    items: [
-      { description: 'Web Design', quantity: 1, unitPrice: 500 },
-      { description: 'Hosting (3 months)', quantity: 1, unitPrice: 75 },
-      { description: 'Domain Name (1 year)', quantity: 1, unitPrice: 15 }
-    ],
-    notes: 'Thank you for your business!'
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [issueDate, setIssueDate] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const [billingAddress, setBillingAddress] = useState('');
+  const [shippingAddress, setShippingAddress] = useState('');
+  const [client, setClient] = useState({ name: '', email: '', phoneNumber: '', address: '' });
+
+  const [items, setItems] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+
+  const [cgst, setCgst] = useState(3);
+  const [sgst, setSgst] = useState(3);
+
+  const [subtotal, setSubtotal] = useState(0);
+
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  //Date and time
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000); // updates every second
+
+    return () => clearInterval(timer); // cleanup
+  }, []);
+
+  //update date
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]; // format as yyyy-mm-dd
+    setIssueDate(today);
+  }, []);
+
+
+  // Fetch inventory
+  const fetchProducts = async () => {
+    const res = await axios.get('http://localhost:5000/getinventorydet');
+    setProducts(res.data);
   };
 
-  useEffect(()=>{
-    const sub = invoice.items.reduce((price, item) => price + item.quantity * item.unitPrice, 0);
-    const cgstValue = sub * 0.03;
-    const sgstValue = sub * 0.03;
-    const totalAmount = sub + cgstValue + sgstValue;
+  useEffect(() => {
+    fetchProducts();
+    const id = `INV-${Math.floor(100000 + Math.random() * 900000)}`;
+    setInvoiceNumber(id);
+  }, []);
 
-    setTotal(sub);
-    setSubTotal(totalAmount);
-    setCGST(cgstValue);
-    setSGST(sgstValue);
-  });
-  console.log(subtotal, total, cgst, sgst);
-  invoice.items.map((item, index) =>{
-    console.log(item.description)
-  } )
+  const addProductToInvoice = (product) => {
+    console.log("Trying to add:", product._id, product.name);
+    console.log("Current items in cart:", items);
+
+
+    items.forEach(item => {
+      console.log("Existing item:", item.productid, item.name);
+    });
+    const existing = items.find(item => item.productId === product.id);
+
+    console.log("existing", existing);
+    if (existing) {
+      const updatedItems = items.map(item =>
+        item.productId === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+      setItems(updatedItems);
+    } else {
+      setItems([...items, { 
+        productId: product.id, 
+        name: product.name, 
+        price: product.price, 
+        quantity: 1 
+      }]);
+    }
+    setShowPopup(false);
+  };
+
+  const removeItem = (index) => {
+    const updatedItems = items.filter((_, i) => i !== index);
+    setItems(updatedItems);
+  };
+
+
+  const updateQuantity = (index, qty) => {
+    const updated = [...items];
+    updated[index].quantity = qty;
+    setItems(updated);
+  };
+
+  useEffect(() => {
+    const total = items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
+    setSubtotal(total);
+  }, [items]);
+
+  const totalTax = (subtotal * (cgst + sgst)) / 100;
+  const totalAmount = subtotal + totalTax;
+
+  const handleSubmit = async () => {
+    const invoiceData = {
+      invoiceNumber,
+      client,
+      billingAddress,
+      shippingAddress,
+      items,
+      totalAmount,
+      cgst,
+      sgst,
+      issueDate,
+      dueDate
+    };
+
+    const res = await axios.post('http://localhost:5000/addinvoice', invoiceData);
+    alert(res.data.message || "Invoice Created");
+  };
+
   return (
     <>
-    <Navbar />
-      <h1>This is the Invoice Page!</h1>
-      Company Name:
-      <input type="text" />
-      <br />
-      Company Address:
-      <textarea type="text" />
-      <br />
-      Billing to:
-      <textarea type="text"></textarea>
-      <br />
-      Shipping to:
-      <textarea type="text"></textarea>
-      <br />
-      invoice id:
-      <p>e3432ThdKKadkjnnmm9384</p>
-      Date:
-      <input type="date" />
-      <br />
+      <Navbar />
+      <div className="add-invoice-container">
+      <h1>Invoice Generator</h1>
 
-      <div className="table">
+      <div className="top-section">
+        {/* Left: Customer Info */}
+        <div className="customer-info">
+          <div className="form-group">
+            <label>Customer Name</label>
+            <input
+              value={client.name}
+              onChange={(e) => setClient({ ...client, name: e.target.value })}
+            />
+          </div>
+          <div className="form-group">
+            <label>Customer Email</label>
+            <input
+              value={client.email}
+              onChange={(e) => setClient({ ...client, email: e.target.value })}
+            />
+          </div>
+          <div className="form-group">
+            <label>Phone Number</label>
+            <input
+              value={client.phoneNumber}
+              onChange={(e) => setClient({ ...client, phoneNumber: e.target.value })}
+            />
+          </div>
+        </div>
 
+        {/* Right: Invoice Info */}
+        <div className="invoice-info">
+          <div className="header-time-display">
+            <span className="clock-icon">🕒</span>
+            <strong>{currentDateTime.toLocaleString()}</strong>
+          </div>
+          <p>Invoice #: {invoiceNumber}</p>
+          <label>Issue Date</label>
+          <input
+            type="date"
+            value={issueDate}
+            onChange={(e) => setIssueDate(e.target.value)}
+          />
+          <label>Due Date</label>
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </div>
       </div>
 
 
+      <div className="form-group">
+        <label>Customer Address</label>
+        <textarea value={client.address} onChange={(e) => setClient({ ...client, address: e.target.value })} />
+      </div>
 
+      <div className="form-group">
+        <label>Billing Address</label>
+        <textarea value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)} />
+      </div>
 
+      <div className="form-group">
+        <label>Shipping Address</label>
+        <textarea value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} />
+      </div>
 
+      <button onClick={() => setShowPopup(true)}>Add Product</button>
 
-
-
-      <div style={{ padding: 20, fontFamily: 'Arial' }}>
-      <h2>Invoice</h2>
-      <p><strong>Invoice #: </strong>{invoice.invoiceNumber}</p>
-      <p><strong>Date: </strong>{invoice.date}</p>
-      <p><strong>Due Date: </strong>{invoice.dueDate}</p>
-
-      <h3>Bill To:</h3>
-      <p>{invoice.billTo.name}</p>
-      <p>{invoice.billTo.address}</p>
-      <p>{invoice.billTo.city}, {invoice.billTo.zip}</p>
-      <p>{invoice.billTo.country}</p>
-
-      <h3>Items:</h3>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ borderBottom: '1px solid #ccc' }}>Description</th>
-            <th style={{ borderBottom: '1px solid #ccc' }}>Quantity</th>
-            <th style={{ borderBottom: '1px solid #ccc' }}>Unit Price</th>
-            <th style={{ borderBottom: '1px solid #ccc' }}>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {invoice.items.map((item, index) => (
-            <tr key={index}>
-              <td>{item.description}</td>
-              <td>{item.quantity}</td>
-              <td>Rs.{item.unitPrice.toFixed(2)}</td>
-              <td>Rs.{(item.quantity * item.unitPrice).toFixed(2)}</td>
-            </tr>
+      {showPopup && (
+        <div className="popup">
+          <h3>Select a product</h3>
+          {products.map(p => (
+            <div key={p._id} onClick={() => addProductToInvoice(p)}>
+              {p.name} - Rs.{p.price}
+            </div>
           ))}
-        </tbody>
-      </table>
-
-      <h3 style={{ textAlign: 'right' }}>
-        Total: Rs.{total.toFixed(2)}
-        <br />
-        CGST 3%: Rs.{cgst.toFixed(2)}
-        <br />
-        SGST 3%: Rs.{sgst.toFixed(2)}
-        <br />
-        SubTotal: Rs.{subtotal.toFixed(2)}
-      </h3>
-      <hr />
-      <br /><br /><br /><br /><br /><br />
-
-
-
-
-
-
-
-
-        <div>
-          Id
-          Name
-          Description
-          Quantity
-          Unit Price
-          Total
-          <hr />
-
-          <input type="number" name="" id="prod_id" />
-
-          <button type="button" id="add_product">+</button>
-          <button type="button" id="remove_product">-</button>
-          <button type="button" id="add_items">Add Items</button>
-
-          
-
+          <button onClick={() => setShowPopup(false)}>Close</button>
         </div>
+      )}
 
-      <p><em>{invoice.notes}</em></p>
+      <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((item, idx) => (
+          <tr key={idx}>
+            <td>{item.name}</td>
+            <td>Rs.{item.price}</td>
+            <td>
+              <input
+                type="number"
+                value={item.quantity}
+                min="1"
+                onChange={(e) => updateQuantity(idx, Number(e.target.value))}
+              />
+            </td>
+            <td>Rs.{(item.price * item.quantity).toFixed(2)}</td>
+            <td>
+              <button
+                onClick={() => removeItem(idx)}
+                title="Delete this item"
+                style={{
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  color: "red",
+                  fontSize: "16px"
+                }}
+              >
+                ❌
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+
+
+      <h3>Subtotal: Rs.{subtotal.toFixed(2)}</h3>
+
+      <div className="form-group">
+        <label>CGST %</label>
+        <input type="number" value={cgst} onChange={(e) => setCgst(Number(e.target.value))} />
+      </div>
+
+      <div className="form-group">
+        <label>SGST %</label>
+        <input type="number" value={sgst} onChange={(e) => setSgst(Number(e.target.value))} />
+      </div>
+
+      <h3>Total: Rs.{totalAmount.toFixed(2)}</h3>
+
+      <button onClick={handleSubmit}>Create Invoice</button>
     </div>
-          
+
     </>
-  )
+
+    
+  );
 }
 
 export default AddInvoice

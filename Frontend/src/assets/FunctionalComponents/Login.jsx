@@ -1,12 +1,13 @@
 import React, {useState} from 'react'
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from "axios";
-import Signup from './Signup';
+import Navbar from './Navbar';
 
 const Login = () => {
     const navigate = useNavigate();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const location = useLocation();
+    const [email, setEmail] = useState(location.state?.email || "");
+    const [password, setPassword] = useState(location.state?.password || "");
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     
@@ -21,14 +22,17 @@ const Login = () => {
 
         if(isLogginSuccessful){
             alert(req.data.message);
+            localStorage.setItem('isLoggedIn', 'true');
+            setIsLoggedIn(true); // from AuthContext
             navigate("/");
         }
         else{
-            alert(req.data.message);
+            setErrorMessage(req.data.message || "Login failed");
         }
     }
   return (
     <div>
+        <Navbar />
         <h2>Login</h2>
         <form onSubmit={handleLogin}>
             Email:
@@ -48,6 +52,8 @@ const Login = () => {
                 onChange={(e)=>setPassword(e.target.value)}
                 required
             />
+            <br /><br />
+            {errorMessage && <span style={{ color: 'red' }}>{errorMessage}</span>}
             <br /><br />
             <button type="submit">Login</button>
             <br /><br />

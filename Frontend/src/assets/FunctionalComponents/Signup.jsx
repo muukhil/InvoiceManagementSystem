@@ -10,10 +10,18 @@ const Signup = () => {
     const [confirmPassword, setconfirmPassword] = useState("")
     const [phonenumber, setphonenumber] = useState(0)
     const [email, setemail] = useState("")
+    const [passwordError, setPasswordError] = useState("")
 
     const handleSignup = async (event)=>{
       event.preventDefault();
+      if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    } else {
+      setPasswordError(""); 
+    }
 
+    try{      
       const req = await axios.post("http://localhost:5000/signup", {
         firstName: firstName,
         lastName: lastName,
@@ -21,18 +29,28 @@ const Signup = () => {
         password: password,
         phoneNumber: phonenumber,
       })
-
+      
       const message = req.data.message;
       const isSignup = req.data.isSignup;
-
+      
       if(isSignup){
         alert(message);
-        navigate("/login");
+        navigate("/login", {
+          state: {
+            email: email,
+            password: password,
+          },
+        });
       }
       else{
         alert(message);
       }
+    } catch (error){
+      setPasswordError("Signup failed. Try again.");
+      console.error(error);
     }
+  }
+  
 
   return (
     <div>
@@ -91,6 +109,7 @@ const Signup = () => {
             placeholder="Re-enter Password" 
             required 
         />
+        {passwordError && <span style={{ color: 'red' }}>{passwordError}</span>}
         <br /><br />
 
         Phone Number:
