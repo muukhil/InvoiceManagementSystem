@@ -1,6 +1,6 @@
 const mdb = require('mongoose')
 const inventorySchema = mdb.Schema({
-    id:Number,
+    id:{ type: String, unique: true },
     image:String,
     name:String,
     description:String,

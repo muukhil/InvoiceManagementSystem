@@ -1,9 +1,13 @@
 import {React, useEffect, useState} from 'react'
+import { useNavigate, Link, Navigate } from 'react-router-dom'
 import axios from "axios";
 import Navbar from "./Navbar"
 import "../CSS/AddInvoice.css"
 
 const AddInvoice = () => {
+  
+  const navigate = useNavigate();
+
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [issueDate, setIssueDate] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -11,8 +15,8 @@ const AddInvoice = () => {
   const [shippingAddress, setShippingAddress] = useState('');
   const [client, setClient] = useState({ name: '', email: '', phoneNumber: '', address: '' });
 
-  const [items, setItems] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [items, setItems] = useState([]);            //this is for the cart, items in invoice
+  const [products, setProducts] = useState([]);     // available products in the inventory 
   const [showPopup, setShowPopup] = useState(false);
 
   const [cgst, setCgst] = useState(3);
@@ -51,12 +55,12 @@ const AddInvoice = () => {
   }, []);
 
   const addProductToInvoice = (product) => {
-    console.log("Trying to add:", product._id, product.name);
+    console.log("Trying to add:", product.id, product.name);
     console.log("Current items in cart:", items);
 
 
     items.forEach(item => {
-      console.log("Existing item:", item.productid, item.name);
+      console.log("Existing item:", item.productId, item.name);
     });
     const existing = items.find(item => item.productId === product.id);
 
@@ -100,6 +104,7 @@ const AddInvoice = () => {
   const totalAmount = subtotal + totalTax;
 
   const handleSubmit = async () => {
+    
     const invoiceData = {
       invoiceNumber,
       client,
@@ -113,8 +118,14 @@ const AddInvoice = () => {
       dueDate
     };
 
-    const res = await axios.post('http://localhost:5000/addinvoice', invoiceData);
-    alert(res.data.message || "Invoice Created");
+    try {
+      const res = await axios.post('http://localhost:5000/addinvoice', invoiceData);
+      alert(res.data.message || "Invoice Created");
+      navigate("/invoice");
+    } catch (err) {
+      console.error("Error creating invoice:", err);
+      alert("Something went wrong");
+    }
   };
 
   return (
@@ -200,6 +211,7 @@ const AddInvoice = () => {
           <button onClick={() => setShowPopup(false)}>Close</button>
         </div>
       )}
+
 
       <table>
       <thead>

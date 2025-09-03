@@ -1,11 +1,11 @@
 const mdb = require('mongoose')
-const signupSchema = mdb.Schema({
-    firstName:String,
-    lastName:String,
-    email:String,
-    password:String,
-    phoneNumber:Number,
-})
+const signupSchema = new mdb.Schema({
+  firstName: String,
+  lastName: String,
+  email: { type: String, unique: true },
+  password: String,
+  phoneNumber: String,
+  role: { type: String, enum: ['admin', 'user'], default: 'user' }
+}, { timestamps: true });
 
-const signup_schema = mdb.model("signup", signupSchema)
-module.exports= signup_schema
+module.exports = mdb.model("Signup", signupSchema)

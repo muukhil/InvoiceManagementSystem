@@ -1,12 +1,12 @@
 const mdb = require('mongoose')
-const cartSchema = mdb.Schema({
-    id:String,
-    image:String,
-    name:String,
-    description:String,
-    price:Number,
-    quantity:Number,
-})
+const cartSchema = new mdb.Schema({
+  userId: { type: mdb.Schema.Types.ObjectId, ref: 'Signup' },
+  items: [
+    {
+      productId: { type: mdb.Schema.Types.ObjectId, ref: 'Inventory' },
+      quantity: Number
+    }
+  ]
+}, { timestamps: true });
 
-const cart_schema = mdb.model("cart", cartSchema)
-module.exports= cart_schema
+module.exports = mdb.model("Cart", cartSchema)
