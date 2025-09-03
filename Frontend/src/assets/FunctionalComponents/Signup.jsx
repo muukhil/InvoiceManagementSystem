@@ -1,133 +1,136 @@
-import React, {useState} from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import axios from "axios";
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import Navbar from './Navbar';
+import axios from 'axios';
+import '../CSS/Signup.css';
 
 const Signup = () => {
-    const navigate = useNavigate();
-    const [firstName, setfirstName] = useState("")
-    const [lastName, setlastName] = useState("")
-    const [password, setpassword] = useState("")
-    const [confirmPassword, setconfirmPassword] = useState("")
-    const [phonenumber, setphonenumber] = useState(0)
-    const [email, setemail] = useState("")
-    const [passwordError, setPasswordError] = useState("")
+  const navigate = useNavigate();
+  const [firstName, setfirstName] = useState('');
+  const [lastName, setlastName] = useState('');
+  const [password, setpassword] = useState('');
+  const [confirmPassword, setconfirmPassword] = useState('');
+  const [phonenumber, setphonenumber] = useState('');
+  const [email, setemail] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
-    const handleSignup = async (event)=>{
-      event.preventDefault();
-      if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match");
+  const handleSignup = async (event) => {
+    event.preventDefault();
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match');
       return;
     } else {
-      setPasswordError(""); 
+      setPasswordError('');
     }
 
-    try{      
-      const req = await axios.post("http://localhost:5000/signup", {
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        password: password,
+    try {
+      const req = await axios.post('http://localhost:5000/signup', {
+        firstName,
+        lastName,
+        email,
+        password,
         phoneNumber: phonenumber,
-      })
-      
-      const message = req.data.message;
-      const isSignup = req.data.isSignup;
-      
-      if(isSignup){
+      });
+
+      const { message, isSignup } = req.data;
+
+      if (isSignup) {
         alert(message);
-        navigate("/login", {
-          state: {
-            email: email,
-            password: password,
-          },
+        navigate('/login', {
+          state: { email, password },
         });
-      }
-      else{
+      } else {
         alert(message);
       }
-    } catch (error){
-      setPasswordError("Signup failed. Try again.");
+    } catch (error) {
+      setPasswordError('Signup failed. Try again.');
       console.error(error);
     }
-  }
-  
+  };
 
   return (
-    <div>
-      <h1>Signup Page</h1>
-      <form onSubmit={handleSignup}>
-        First Name:
-        <input 
-            type="text" 
-            id="uname" 
-            value={firstName} 
-            onChange={(e)=>setfirstName(e.target.value)} 
-            placeholder="Enter First Name"
-            required 
-        />
-        <br /><br />
+    <>
+      <Navbar />
+      <div className="signup-container">
+        <form className="signup-form" onSubmit={handleSignup}>
+          <h2>Create Account</h2>
 
-        Last Name:
-        <input 
-            type="text" 
-            id="name" 
-            value={lastName} 
-            onChange={(e)=>setlastName(e.target.value)} 
-            placeholder="Enter Last Name"
-            required 
-        />
-        <br /><br />
+          <div className="form-group">
+            <label>First Name</label>
+            <input
+              type="text"
+              value={firstName}
+              onChange={(e) => setfirstName(e.target.value)}
+              placeholder="Enter First Name"
+              required
+            />
+          </div>
 
-        Email:
-        <input 
-            type="email" 
-            id="email" 
-            value={email} 
-            onChange={(e)=>setemail(e.target.value)} 
-            placeholder="Enter Email"
-            required 
-        />
-        <br /><br />
+          <div className="form-group">
+            <label>Last Name</label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setlastName(e.target.value)}
+              placeholder="Enter Last Name"
+              required
+            />
+          </div>
 
-        Password:
-        <input 
-            type="password" 
-            id="password" 
-            value={password} 
-            onChange={(e)=>setpassword(e.target.value)} 
-            placeholder="Enter Password"
-            required 
-        />
-        <br /><br />
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setemail(e.target.value)}
+              placeholder="Enter Email"
+              required
+            />
+          </div>
 
-        Re-enter Password:
-        <input 
-            type="password" 
-            id="confirm-password" 
-            value={confirmPassword} 
-            onChange={(e)=>setconfirmPassword(e.target.value)}
-            placeholder="Re-enter Password" 
-            required 
-        />
-        {passwordError && <span style={{ color: 'red' }}>{passwordError}</span>}
-        <br /><br />
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setpassword(e.target.value)}
+              placeholder="Enter Password"
+              required
+            />
+          </div>
 
-        Phone Number:
-        <input 
-            type="tel" 
-            name="phonenumber"
-            id="phonenumber" 
-            value={phonenumber} 
-            onChange={(e)=>setphonenumber(e.target.value)}
-            placeholder="Enter Phone Number" 
-            required
-        />
-        <br /><br />
-        <button type="submit">Sign Up</button>
-      </form>
-      <p>Already have an account?<Link to='/login'>Login</Link></p>
-    </div>
-  )
-}
+          <div className="form-group">
+            <label>Re-enter Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setconfirmPassword(e.target.value)}
+              placeholder="Re-enter Password"
+              required
+            />
+            {passwordError && <p className="error">{passwordError}</p>}
+          </div>
 
-export default Signup
+          <div className="form-group">
+            <label>Phone Number</label>
+            <input
+              type="tel"
+              value={phonenumber}
+              onChange={(e) => setphonenumber(e.target.value)}
+              placeholder="Enter Phone Number"
+              required
+            />
+          </div>
+
+          <button type="submit" className="submit-btn">Sign Up</button>
+
+          <p className="login-link">
+            Already have an account? <Link to="/login">Login</Link>
+          </p>
+        </form>
+      </div>
+    </>
+  );
+};
+
+export default Signup;
